@@ -14,6 +14,12 @@
     min-height: 150px;
     border: 1px solid blue;
   }
+  .qrcode {
+    width: 260px;
+  }
+  .options {
+    display: none;
+  }
 
   </style>
 
@@ -22,7 +28,9 @@
 </head>
 <body>
 <div id="header" class="header">
-  <div id="qrcode"></div>
+  <div id="options">
+    <div id="qrcode"></div>
+  </div>
   <div id="message">Click here for sharing options</div>
 
 </div>
@@ -31,6 +39,15 @@
 <div id="footer" class="footer">Click or drop images here to share</div>
 
 <script>
+
+  show_options = false
+
+  base_url = window.location.href
+  anchor = base_url.indexOf("#")
+  if (anchor > -1) {
+    base_url = base_url.slice(0, anchor)
+  }
+  base_url = base_url.replace("127.0.0.1", "192.168.0.3")
   welcome = document.getElementById("footer")
   filesbutton = document.getElementById("filesbutton")
   filesbutton.onchange = function(event) {
@@ -58,6 +75,9 @@
 
   function addQrCode(url) {
     new QRCode(document.getElementById("qrcode"), url);
+    if (show_options == false) {
+      document.getElementById("qrcode").style.display = "none"
+    }
   }
 
   var file_drop = document.body //.getElementById('file-drop');
@@ -95,11 +115,22 @@
 
 
   function shareTorrent() {
-    client.seed(imageFiles, function(torrent) {
-      console.log('Client is seeding:', torrent.infoHash)
-      addQrCode("https://manicphase.github.io/super-quick-share/#"+torrent.infoHash)
-      window.history.pushState({}, "sharing torrent", "#"+torrent.infoHash)
-    })
+    if (show_options) {
+      document.getElementById("options").style.display = "none"
+      message.innerHTML = "Click here for sharing options"
+      show_options = false
+    }
+    else {
+      message.innerHTML = "Click here to hide options"
+      document.getElementById("options").style.display = "block"
+      document.getElementById("qrcode").style.display = "block"
+      show_options = true
+      client.seed(imageFiles, function(torrent) {
+        console.log('Client is seeding:', torrent.infoHash)
+        addQrCode(base_url+"/#"+torrent.infoHash)
+        window.history.pushState({}, "sharing torrent", "#"+torrent.infoHash)
+      })
+    }
   }
 
   //client.on("ready", function(torrent) {console.log("client ready" + torrent.infoHash)})
@@ -140,7 +171,7 @@
     torrentId = this_location.split("#")[1]
     console.log("torrent hash found")
     downloadTorrent(torrentId)
-    addQrCode("https://manicphase.github.io/super-quick-share/#"+torrentId)
+    addQrCode(base_url+"/#"+torrentId)
   }
 
   function save_image(event) {
