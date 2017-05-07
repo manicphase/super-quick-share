@@ -1,0 +1,219 @@
+<head>
+  <script src="https://cdn.jsdelivr.net/webtorrent/latest/webtorrent.min.js"></script>
+  <script src="/js/qrcode/qrcode.min.js"></script>
+  <style>
+  .thumb {
+    display:none;
+  }
+  .header {
+    background-color: grey;
+    min-height: 30px;
+  }
+  .footer {
+    background-color: grey;
+    min-height: 150px;
+    border: 1px solid blue;
+  }
+
+  </style>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+</head>
+<body>
+<div id="header" class="header">
+  <div id="qrcode"></div>
+  <div id="message">Click here for sharing options</div>
+
+</div>
+<div id="list"></div>
+<input id="filesbutton" type="file" multiple="multiple" style="display: none" />
+<div id="footer" class="footer">Click or drop images here to share</div>
+
+<script>
+  welcome = document.getElementById("footer")
+  filesbutton = document.getElementById("filesbutton")
+  filesbutton.onchange = function(event) {
+    console.log("filesbutton called")
+    handleFileSelect(filesbutton.files)
+  }
+  opendialog = function() {
+    filesbutton.click()
+  }
+  welcome.addEventListener("click", opendialog)
+
+  message = document.getElementById("message")
+
+  header = document.getElementById("header")
+  header.addEventListener("click", shareTorrent)
+
+
+  var client = new WebTorrent()
+  var imageFiles = []
+
+  var test_ctx;
+  var test_canvas;
+
+  var thumbnails = []
+
+  function addQrCode(url) {
+    new QRCode(document.getElementById("qrcode"), url);
+  }
+
+  var file_drop = document.body //.getElementById('file-drop');
+  file_drop.addEventListener(
+    'dragover',
+    function handleDragOver(evt) {
+      evt.stopPropagation()
+      evt.preventDefault()
+      evt.dataTransfer.dropEffect = 'copy'
+    },
+    false
+  )
+  file_drop.addEventListener(
+    'drop',
+    function(evt) {
+      evt.stopPropagation()
+      evt.preventDefault()
+      var files = evt.dataTransfer.files  // FileList object.
+      handleFileSelect(files)
+    },
+    false
+  )
+
+  function handleBlob(filename) {
+    return function(blob) {
+      console.log("doing blob stuff")
+      file = new File([blob], filename)
+      imageFiles.push(file)
+    }
+  }
+
+  console.log("ready")
+
+  var test_event;
+
+
+  function shareTorrent() {
+    client.seed(imageFiles, function(torrent) {
+      console.log('Client is seeding:', torrent.infoHash)
+      addQrCode("http://192.168.0.3:8123/#"+torrent.infoHash)
+      window.history.pushState({}, "sharing torrent", "#"+torrent.infoHash)
+    })
+  }
+
+  //client.on("ready", function(torrent) {console.log("client ready" + torrent.infoHash)})
+
+  function downloadTorrent(torrentId) {
+    magnet_link = "magnet:?xt=urn:btih:" + torrentId + "&dn=DSC_0152.JPG&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com"
+    console.log("dl torrent called: " + torrentId)
+    client.add(torrentId,
+                {announce: ['wss://tracker.webtorrent.io/',"wss://tracker.btorrent.xyz/"]},
+                function (torrent) {
+      //torrent.on(ready, function() {console.log("torrent ready")})
+      console.log("added torrent")
+      console.log(torrent.files)
+
+      // https://github.com/webtorrent/webtorrent/issues/164
+      // Remove default selection (whole torrent)
+      torrent.deselect(0, torrent.pieces.length - 1, false)
+
+      for (f in torrent.files) {
+        f = torrent.files[f]
+        list = document.getElementById("list")
+        if (f.name.startsWith("_thumb_")) {
+          //f.addEventListener("click", save_image)
+          f.appendTo(list)
+          element_f = list.childNodes[list.childElementCount -1]
+          element_f.setAttribute("id", f.name)
+          element_f.addEventListener("click", save_image)
+        }
+        message.innerHTML = "Click here for sharing options"
+      }
+    })
+  }
+
+  this_location = window.location.href
+
+  if (this_location.indexOf("#") > 0) {
+    message.innerHTML = "Downloading torrent and previews"
+    torrentId = this_location.split("#")[1]
+    console.log("torrent hash found")
+    downloadTorrent(torrentId)
+    addQrCode("http://192.168.0.3:8123/#"+torrentId)
+  }
+
+  function save_image(event) {
+    test_event = event
+    target_id = event.target.id.slice(7)
+    //alert("clicked " + target_id)
+    if (client.torrents.length > 0) {
+      for (var i = 0, f; f = client.torrents[0].files[i]; i++) {
+        console.log(f.name, target_id)
+        if (f.name == target_id) {
+          serveFile(f)
+        }
+      }
+    }
+  }
+
+  function serveFile(f) {
+    //alert("serving file")
+    f.getBlobURL(function (err, url) {
+      if (err) throw err
+      var a = document.createElement('a')
+      a.download = f.name
+      a.href = url
+      a.textContent = 'Download ' + f.name
+      a.style = "display: none"
+      document.body.appendChild(a)
+      a.click()
+    })
+  }
+
+  function handleFileSelect(files) {
+    //var files = evt.target.files; // FileList object
+
+    // Loop through the FileList and render image files as thumbnails.
+    for (var i = 0, f; f = files[i]; i++) {
+      // Only process image files.
+      console.log("processing file")
+      if (!f.type.match('image.*')) {
+        continue;
+      }
+
+      imageFiles.push(f)
+
+      console.log("doing image stuff")
+      var img = document.createElement("img");
+
+
+      doImageStuff = function(f) {
+        return function(event) {
+          thumb_width = 330
+          console.log("blah", event)
+          test_event = event
+          var canvas = document.createElement("canvas");
+          var ctx = canvas.getContext("2d");
+          console.log(canvas.height)
+          var new_height = img.height * (thumb_width/img.width)
+          ctx.canvas.height = new_height
+          i = new Image(thumb_width, new_height)
+          ctx.drawImage(event.target, 0,0, thumb_width,new_height)
+          canvas.setAttribute("id", "_thumb_" + f.name)
+          canvas.addEventListener("click", save_image)
+          document.getElementById("list").appendChild(canvas)
+          canvas.toBlob(handleBlob("_thumb_" + f.name),"image/jpeg", 0.8)
+        }
+      }
+
+      img.addEventListener("load", doImageStuff(f))
+
+      console.log(URL.createObjectURL(f))
+      img.src = URL.createObjectURL(f)
+
+    }
+  }
+
+</script>
+</body>
