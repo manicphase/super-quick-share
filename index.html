@@ -97,7 +97,7 @@
   function shareTorrent() {
     client.seed(imageFiles, function(torrent) {
       console.log('Client is seeding:', torrent.infoHash)
-      addQrCode("http://192.168.0.3:8123/#"+torrent.infoHash)
+      addQrCode("https://manicphase.github.io/super-quick-share/#"+torrent.infoHash)
       window.history.pushState({}, "sharing torrent", "#"+torrent.infoHash)
     })
   }
@@ -140,7 +140,7 @@
     torrentId = this_location.split("#")[1]
     console.log("torrent hash found")
     downloadTorrent(torrentId)
-    addQrCode("http://192.168.0.3:8123/#"+torrentId)
+    addQrCode("https://manicphase.github.io/super-quick-share/#"+torrentId)
   }
 
   function save_image(event) {
