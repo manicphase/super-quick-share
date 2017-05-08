@@ -4,42 +4,58 @@
   <style>
   .thumb {
     display:none;
+    width: 100%;
   }
   .header {
     background-color: grey;
-    min-height: 30px;
   }
   .footer {
     background-color: grey;
     min-height: 150px;
     border: 1px solid blue;
   }
-  .qrcode {
+  #qrcode {
+    display: inline;
+    float: left;
     width: 260px;
   }
-  .options {
+  #options {
     display: none;
+  }
+  #options-details {
+    display: inherit;
+    float: left;
+    max-width: 700;
+  }
+  #message {
+    left:inherit;
+    min-height: 30px;
   }
 
   </style>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<title>Super Quick Share</title>
 </head>
 <body>
 <div id="header" class="header">
   <div id="options">
     <div id="qrcode"></div>
+    <div id="options-details">
+      Scan the QR code, copy the url in the address bar, or click the share button in your browser to share your files.<br><br>
+      Warning: closing or refreshing this page will stop seeding the images you've shared, please wait until whoever you have sent them to has finished downloading them.<br><br>
+      For a more persistant gallery, I'd recommend installing a webtorrent compatible desktop client such as <a href="https://webtorrent.io/desktop">Webtorrent Desktop</a>
+      or <a href="http://www.vuze.com">Vuze</a> and downloading the files from this <a id="magnet_link">magnet link</a> until 100% before closing this window.<br>
+      <a id="magnet_link">
+    </div>
   </div>
   <div id="message">Click here for sharing options</div>
-
 </div>
 <div id="list"></div>
 <input id="filesbutton" type="file" multiple="multiple" style="display: none" />
 <div id="footer" class="footer">Click or drop images here to share</div>
 
 <script>
-
   show_options = false
 
   base_url = window.location.href
@@ -62,7 +78,7 @@
   message = document.getElementById("message")
 
   header = document.getElementById("header")
-  header.addEventListener("click", shareTorrent)
+  message.addEventListener("click", shareTorrent)
 
 
   var client = new WebTorrent()
@@ -70,13 +86,14 @@
 
   var test_ctx;
   var test_canvas;
+  var infohash;
 
   var thumbnails = []
 
   function addQrCode(url) {
     new QRCode(document.getElementById("qrcode"), url);
     if (show_options == false) {
-      document.getElementById("qrcode").style.display = "none"
+      document.getElementById("qrcode").style.width = "260px"
     }
   }
 
@@ -109,10 +126,14 @@
     }
   }
 
+  function addMagnet(infohash) {
+    magnet_link = "magnet:?xt=urn:btih:" + infohash + "&dn=photos&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.webtorrent.io&tr=wss%3A%2F%2Ftracker.openwebtorrent.com"
+    document.getElementById("magnet_link").innerHTML = "<a href='" + magnet_link + "'>magnet link</a>"
+  }
+
   console.log("ready")
 
   var test_event;
-
 
   function shareTorrent() {
     if (show_options) {
@@ -122,12 +143,15 @@
     }
     else {
       message.innerHTML = "Click here to hide options"
-      document.getElementById("options").style.display = "block"
-      document.getElementById("qrcode").style.display = "block"
+      document.getElementById("options").style.display = "inline-block"
       show_options = true
+      if (infohash) {
+        addMagnet(infohash)
+      }
       client.seed(imageFiles, function(torrent) {
         console.log('Client is seeding:', torrent.infoHash)
         addQrCode(base_url+"/#"+torrent.infoHash)
+        addMagnet(torrent.infoHash)
         window.history.pushState({}, "sharing torrent", "#"+torrent.infoHash)
       })
     }
@@ -136,10 +160,9 @@
   //client.on("ready", function(torrent) {console.log("client ready" + torrent.infoHash)})
 
   function downloadTorrent(torrentId) {
-    magnet_link = "magnet:?xt=urn:btih:" + torrentId + "&dn=DSC_0152.JPG&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com"
     console.log("dl torrent called: " + torrentId)
     client.add(torrentId,
-                {announce: ['wss://tracker.webtorrent.io/',"wss://tracker.btorrent.xyz/"]},
+                {announce: ['wss://tracker.webtorrent.io/',"wss://tracker.btorrent.xyz/","wss://tracker.openwebtorrent.com"]},
                 function (torrent) {
       //torrent.on(ready, function() {console.log("torrent ready")})
       console.log("added torrent")
@@ -172,6 +195,7 @@
     console.log("torrent hash found")
     downloadTorrent(torrentId)
     addQrCode(base_url+"/#"+torrentId)
+    infohash = torrentId
   }
 
   function save_image(event) {
