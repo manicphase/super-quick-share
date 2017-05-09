@@ -1,6 +1,6 @@
 <head>
   <script src="https://cdn.jsdelivr.net/webtorrent/latest/webtorrent.min.js"></script>
-  <script src="js/qrcode/qrcode.min.js"></script>
+  <script src="js/qcode-decoder/build/qcode-decoder.min.js"></script>
   <style>
   .thumb {
     display:none;
@@ -31,6 +31,13 @@
     left:inherit;
     min-height: 30px;
   }
+  #qrcode-dialog {
+    min-height: 150;
+    display: none;
+  }
+  #camera {
+    display: none;
+  }
 
   </style>
 
@@ -51,6 +58,8 @@
   </div>
   <div id="message">Click here for sharing options</div>
 </div>
+<video id="camera" width=300px autoplay></video>
+<div id="qrcode-dialog">Click to use QR code reader</div>
 <div id="list"></div>
 <input id="filesbutton" type="file" multiple="multiple" style="display: none" />
 <div id="footer" class="footer">Click or drop images here to share</div>
@@ -76,9 +85,14 @@
   welcome.addEventListener("click", opendialog)
 
   message = document.getElementById("message")
+  message.addEventListener("click", shareTorrent)
 
   header = document.getElementById("header")
-  message.addEventListener("click", shareTorrent)
+
+  camera = document.getElementById("camera")
+
+  qrdialog = document.getElementById("qrcode-dialog")
+  qrdialog.addEventListener("click", scanQR)
 
 
   var client = new WebTorrent()
@@ -89,6 +103,21 @@
   var infohash;
 
   var thumbnails = []
+
+  var qr = new QCodeDecoder()
+
+  function scanQR() {
+    camera.style.display = "block"
+    qrdialog.style.display = "none"
+    qr.decodeFromCamera(camera, function (err, result) {
+      if (err) throw document.getElementById("list").innerHTML = err.toString()
+      document.getElementById("list").innerHTML = "result: " + result.toString()
+      window.location = result
+      camera.style.display = none
+    });
+  }
+
+  //scanQR()
 
   function addQrCode(url) {
     //new QRCode(document.getElementById("qrcode"), url);
@@ -200,6 +229,10 @@
     addQrCode(base_url+"/#"+torrentId)
     infohash = torrentId
   }
+  else
+  {
+    qrdialog.style.display = "block"
+  }
 
   function save_image(event) {
     test_event = event
@@ -230,6 +263,7 @@
   }
 
   function handleFileSelect(files) {
+    qrdialog.style.display = "none"
     //var files = evt.target.files; // FileList object
 
     // Loop through the FileList and render image files as thumbnails.
