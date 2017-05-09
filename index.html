@@ -91,7 +91,10 @@
   var thumbnails = []
 
   function addQrCode(url) {
-    new QRCode(document.getElementById("qrcode"), url);
+    //new QRCode(document.getElementById("qrcode"), url);
+    googleQR = "https://chart.googleapis.com/chart?chs=250x250&cht=qr&chl=" + encodeURIComponent(url)
+    console.log(googleQR)
+    document.getElementById("qrcode").innerHTML = "<img src='" + googleQR + "'></img>"
     if (show_options == false) {
       document.getElementById("qrcode").style.width = "260px"
     }
