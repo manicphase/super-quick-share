@@ -1,6 +1,7 @@
 <head>
   <script src="https://cdn.jsdelivr.net/webtorrent/latest/webtorrent.min.js"></script>
   <script src="js/qcode-decoder/build/qcode-decoder.min.js"></script>
+  <script src="js/QRScanJS/qrscan.js"></script>
   <style>
   .thumb {
     display:none;
@@ -109,12 +110,18 @@
   function scanQR() {
     camera.style.display = "block"
     qrdialog.style.display = "none"
+    QRReader.init("#camera", "js/QRScanJS/");
+    QRReader.scan(function (result) {
+        window.location = result
+    });
+    /*
     qr.decodeFromCamera(camera, function (err, result) {
       if (err) throw document.getElementById("list").innerHTML = err.toString()
       document.getElementById("list").innerHTML = "result: " + result.toString()
       window.location = result
       camera.style.display = none
     });
+    */
   }
 
   //scanQR()
