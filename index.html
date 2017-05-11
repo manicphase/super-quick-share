@@ -2,19 +2,24 @@
   <script src="https://cdn.jsdelivr.net/webtorrent/latest/webtorrent.min.js"></script>
   <script src="js/QRScanJS/qrscan.js"></script>
   <style>
+  img {
+    width: 100%;
+  }
   .thumb {
     display:none;
     width: 100%;
   }
-  .header {
+  .options-button {
     background-color: grey;
+  }
+  .image-preview {
+    width:100%;
   }
   #footer {
     background-color: lightgrey;
-    min-height: 150px;
     width: 50%;
     display: inline-block;
-
+    height:160px;
   }
   #qrcode {
     display: inline;
@@ -35,6 +40,7 @@
   }
   #qrcode-dialog {
     width: 50%;
+    height:160px;
     min-height: 150;
     display: none;
     display: inline-block;
@@ -43,6 +49,12 @@
   }
   #camera {
     display: none;
+    width: 100%;
+  }
+  #banner {
+    background-color: black;
+    color: white;
+    height: 60px;
   }
 
   </style>
@@ -50,8 +62,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Super Quick Share</title>
 </head>
-<body>
-<div id="header" class="header">
+<body><div id="banner"><h1>SuperQuickShare</h1></div>
+<video id="camera" width=300px autoplay></video>
+<div id="qrcode-dialog">To recieve files via qcode reader, click here.</div>
+<div id="list"></div>
+<input id="filesbutton" type="file" multiple="multiple" style="display: none" />
+<div id="footer" class="footer">To send files, click or drop them here. You can send as many as you want. When you're ready, click "<b>Sharing Options</b>" at the bottom of the page.</div>
+<div id="options-button" class="options-button">
+  <div id="message">Sharing Options</div>
   <div id="options">
     <div id="qrcode"></div>
     <div id="options-details">
@@ -62,14 +80,7 @@
       <a id="magnet_link">
     </div>
   </div>
-  <div id="message">Sharing Options</div>
 </div>
-<video id="camera" width=300px autoplay></video>
-<div id="qrcode-dialog">To recieve files via qcode link, click here.</div>
-<div id="list"></div>
-<input id="filesbutton" type="file" multiple="multiple" style="display: none" />
-<div id="footer" class="footer">To send files, click or drop them here. You can send as many as you want. When you're ready click "<b>Sharing Options</b>" at the top of the page.</div>
-
 <script>
   show_options = false
 
@@ -79,7 +90,7 @@
     base_url = base_url.slice(0, anchor)
   }
   base_url = base_url.replace("127.0.0.1", "192.168.0.3")
-  welcome = document.getElementById("footer")
+  dropzone = document.getElementById("footer")
   filesbutton = document.getElementById("filesbutton")
   filesbutton.onchange = function(event) {
     console.log("filesbutton called")
@@ -88,12 +99,12 @@
   opendialog = function() {
     filesbutton.click()
   }
-  welcome.addEventListener("click", opendialog)
+  dropzone.addEventListener("click", opendialog)
 
   message = document.getElementById("message")
   message.addEventListener("click", shareTorrent)
 
-  header = document.getElementById("header")
+  options_button = document.getElementById("options-button")
 
   camera = document.getElementById("camera")
 
@@ -112,6 +123,7 @@
 
   function scanQR() {
     camera.style.display = "block"
+    dropzone.style.display = "none"
     qrdialog.style.display = "none"
     QRReader.init("#camera", "js/QRScanJS/");
     QRReader.scan(function (result) {
@@ -228,6 +240,8 @@
     downloadTorrent(torrentId)
     addQrCode(base_url+"/#"+torrentId)
     infohash = torrentId
+    dropzone.style.display = "none"
+    qrdialog.style.display = "none"
   }
   else
   {
@@ -265,7 +279,10 @@
   function handleFileSelect(files) {
     qrdialog.style.display = "none"
     //var files = evt.target.files; // FileList object
-
+    if (files.length > 0) {
+      dropzone.style.width = "100%"
+      dropzone.style.height = "100px"
+    }
     // Loop through the FileList and render image files as thumbnails.
     for (var i = 0, f; f = files[i]; i++) {
       // Only process image files.
@@ -282,7 +299,7 @@
 
       doImageStuff = function(f) {
         return function(event) {
-          thumb_width = 330
+          thumb_width = 400
           console.log("blah", event)
           test_event = event
           var canvas = document.createElement("canvas");
@@ -293,6 +310,7 @@
           i = new Image(thumb_width, new_height)
           ctx.drawImage(event.target, 0,0, thumb_width,new_height)
           canvas.setAttribute("id", "_thumb_" + f.name)
+          canvas.setAttribute("class", "image-preview")
           canvas.addEventListener("click", save_image)
           document.getElementById("list").appendChild(canvas)
           canvas.toBlob(handleBlob("_thumb_" + f.name),"image/jpeg", 0.8)
