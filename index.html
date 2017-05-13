@@ -8,6 +8,7 @@
   canvas {
     width: 100%;
   }
+
   .thumb {
     display:none;
     width: 100%;
@@ -20,7 +21,26 @@
     width:100%;
     display:inline-block;
   }
-  #footer {
+  .footer {
+    background-color: black;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+  }
+  #content {
+    border:10px;
+    margin:10px;
+    top: 50px;
+    bottom: 40px;
+    position: fixed;
+    left: 0;
+    right: 0;
+    overflow-y: scroll;
+    overflow-x: hidden;
+  }
+  #dropzone {
     background-color: lightgrey;
     width: 50%;
     display: inline-block;
@@ -57,9 +77,14 @@
     width: 100%;
   }
   #banner {
+    position: fixed;
     background-color: black;
+    width: 100%;
     color: white;
     height: 60px;
+    top: -10px;
+    left: 0;
+    right: 0;
   }
 
   </style>
@@ -68,24 +93,27 @@
 <title>Super Quick Share</title>
 </head>
 <body><div id="banner"><h1>SuperQuickShare</h1></div>
-<video id="camera" width=300px autoplay></video>
-<div id="qrcode-dialog">To recieve files via qcode reader, click here.</div>
-<div id="list"></div>
-<input id="filesbutton" type="file" multiple="multiple" style="display: none" />
-<div id="footer" class="footer">To send files, click or drop them here. You can send as many as you want. When you're ready, click "<b>Sharing Options</b>" at the bottom of the page.</div>
-<div id="options-button" class="options-button">
-  <div id="message">Sharing Options</div>
-  <div id="options">
-    <div id="qrcode"></div>
-    <div id="options-details">
-      Scan the QR code, copy the url in the address bar, or click the share button in your browser to share your files.<br><br>
-      Warning: closing or refreshing this page will stop seeding the images you've shared, please wait until whoever you have sent them to has finished downloading them.<br><br>
-      For a more persistant gallery, I'd recommend installing a webtorrent compatible desktop client such as <a href="https://webtorrent.io/desktop">Webtorrent Desktop</a>
-      or <a href="http://www.vuze.com">Vuze</a> and downloading the files from this <a id="magnet_link">magnet link</a> until 100% before closing this window.<br>
-      <a id="magnet_link">
+  <div id="content">
+    <video id="camera" width=300px autoplay></video>
+    <div id="qrcode-dialog">To recieve files via qcode reader, click here.</div>
+    <div id="list"></div>
+    <input id="filesbutton" type="file" multiple="multiple" style="display: none" />
+    <div id="dropzone" class="dropzone">To send files, click or drop them here. You can send as many as you want. When you're ready, click "<b>Sharing Options</b>" at the bottom of the page.</div>
+    <div id="options-button" class="options-button">
+      <div id="message">Sharing Options</div>
+      <div id="options">
+        <div id="qrcode"></div>
+        <div id="options-details">
+          Scan the QR code, copy the url in the address bar, or click the share button in your browser to share your files.<br><br>
+          Warning: closing or refreshing this page will stop seeding the images you've shared, please wait until whoever you have sent them to has finished downloading them.<br><br>
+          For a more persistant gallery, I'd recommend installing a webtorrent compatible desktop client such as <a href="https://webtorrent.io/desktop">Webtorrent Desktop</a>
+          or <a href="http://www.vuze.com">Vuze</a> and downloading the files from this <a id="magnet_link">magnet link</a> until 100% before closing this window.<br>
+          <a id="magnet_link">
+        </div>
+      </div>
     </div>
   </div>
-</div>
+<div id="footer" class="footer"></div>
 <script>
   show_options = false
 
@@ -95,7 +123,7 @@
     base_url = base_url.slice(0, anchor)
   }
   base_url = base_url.replace("127.0.0.1", "192.168.0.3")
-  dropzone = document.getElementById("footer")
+  dropzone = document.getElementById("dropzone")
   filesbutton = document.getElementById("filesbutton")
   filesbutton.onchange = function(event) {
     console.log("filesbutton called")
