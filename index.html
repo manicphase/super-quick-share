@@ -326,6 +326,8 @@
           console.log(canvas.height)
           var new_height = img.height * (thumb_width/img.width)
           ctx.canvas.height = new_height
+          ctx.canvas.width = thumb_width
+          ctx.imageSmoothingEnabled = true
           i = new Image(thumb_width, new_height)
           ctx.drawImage(event.target, 0,0, thumb_width,new_height)
           canvas.setAttribute("id", "_thumb_" + f.name)
