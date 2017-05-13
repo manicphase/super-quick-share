@@ -1,8 +1,11 @@
-<head>
+ <head>
   <script src="https://cdn.jsdelivr.net/webtorrent/latest/webtorrent.min.js"></script>
   <script src="js/QRScanJS/qrscan.js"></script>
   <style>
   img {
+    width: 100%;
+  }
+  canvas {
     width: 100%;
   }
   .thumb {
@@ -12,8 +15,10 @@
   .options-button {
     background-color: grey;
   }
-  .image-preview {
+
+  .preview-frame {
     width:100%;
+    display:inline-block;
   }
   #footer {
     background-color: lightgrey;
@@ -111,6 +116,8 @@
   qrdialog = document.getElementById("qrcode-dialog")
   qrdialog.addEventListener("click", scanQR)
 
+  horizontal_count = Math.ceil(window.innerWidth / 400)
+  preview_percent = (100/horizontal_count).toString()+"%"
 
   var client = new WebTorrent()
   var imageFiles = []
@@ -221,9 +228,15 @@
         f = torrent.files[f]
         list = document.getElementById("list")
         if (f.name.startsWith("_thumb_")) {
-          //f.addEventListener("click", save_image)
-          f.appendTo(list)
-          element_f = list.childNodes[list.childElementCount -1]
+          preview_div = document.createElement("div")
+          preview_div.setAttribute("class", "preview-frame")
+          preview_div.setAttribute("style","width: " + preview_percent)
+          preview_div.setAttribute("id", f.name + "_frame")
+          list.appendChild(preview_div)
+          p_div = document.getElementById(f.name + "_frame")
+          f.appendTo(p_div)
+
+          element_f = p_div.childNodes[0]
           element_f.setAttribute("id", f.name)
           element_f.addEventListener("click", save_image)
         }
@@ -300,6 +313,11 @@
 
       doImageStuff = function(f) {
         return function(event) {
+          preview_div = document.createElement("div")
+          preview_div.setAttribute("class", "preview-frame")
+          preview_div.setAttribute("style","width: " + preview_percent)
+          preview_div.setAttribute("id", f.name + "_frame")
+          list.appendChild(preview_div)
           thumb_width = 400
           console.log("blah", event)
           test_event = event
@@ -313,8 +331,9 @@
           canvas.setAttribute("id", "_thumb_" + f.name)
           canvas.setAttribute("class", "image-preview")
           canvas.addEventListener("click", save_image)
-          document.getElementById("list").appendChild(canvas)
           canvas.toBlob(handleBlob("_thumb_" + f.name),"image/jpeg", 0.8)
+          preview_div.appendChild(canvas)
+          document.getElementById("list").appendChild(preview_div)
         }
       }
 
