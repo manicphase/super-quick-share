@@ -21,8 +21,9 @@
     width:100%;
     display:inline-block;
   }
-  .footer {
+  #footer {
     background-color: black;
+    color: white;
     position: fixed;
     bottom: 0;
     left: 0;
@@ -30,13 +31,12 @@
     height: 50px;
   }
   #content {
-    border:10px;
-    margin:10px;
+
     top: 50px;
-    bottom: 40px;
+    bottom: 50px;
     position: fixed;
-    left: 0;
-    right: 0;
+    left: 10px;
+    right: 10px;
     overflow-y: scroll;
     overflow-x: hidden;
   }
@@ -144,6 +144,8 @@
   qrdialog = document.getElementById("qrcode-dialog")
   qrdialog.addEventListener("click", scanQR)
 
+  content = document.getElementById("content")
+
   horizontal_count = Math.ceil(window.innerWidth / 400)
   preview_percent = (100/horizontal_count).toString()+"%"
 
@@ -225,6 +227,7 @@
       message.innerHTML = "Click here to hide options"
       document.getElementById("options").style.display = "inline-block"
       show_options = true
+      content.scrollTo(0, content.scrollTopMax)
       if (infohash) {
         addMagnet(infohash)
       }
@@ -277,6 +280,7 @@
 
   if (this_location.indexOf("#") > 0) {
     message.innerHTML = "Downloading torrent and previews"
+    document.getElementById("footer").innerHTML = "Click previews to download files"
     torrentId = this_location.split("#")[1]
     console.log("torrent hash found")
     downloadTorrent(torrentId)
@@ -298,6 +302,7 @@
       for (var i = 0, f; f = client.torrents[0].files[i]; i++) {
         console.log(f.name, target_id)
         if (f.name == target_id) {
+          document.getElementById("footer").innerHTML = "downloading: " + f.name
           serveFile(f)
         }
       }
@@ -314,6 +319,7 @@
       a.textContent = 'Download ' + f.name
       a.style = "display: none"
       document.body.appendChild(a)
+      document.getElementById("footer").innerHTML = "saved: " + f.name
       a.click()
     })
   }
