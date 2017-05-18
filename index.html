@@ -233,7 +233,7 @@
       message.innerHTML = "Click here to hide options"
       document.getElementById("options").style.display = "inline-block"
       show_options = true
-      content.scrollTo(0, content.scrollTopMax)
+      setTimeout(function() {content.scrollTo(0, content.scrollTopMax);},1)
       if (infohash) {
         addMagnet(infohash)
       }
