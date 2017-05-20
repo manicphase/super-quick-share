@@ -164,13 +164,34 @@
 
   var thumbnails = []
 
+  function hexToBase64(hexstring) {
+    return btoa(hexstring.match(/\w{2}/g).map(function(a) {
+        return String.fromCharCode(parseInt(a, 16));
+    }).join(""));
+  }
+
+  function base64toHEX(base64) {
+    var raw = atob(base64);
+    var HEX = '';
+    for ( i = 0; i < raw.length; i++ ) {
+      var _hex = raw.charCodeAt(i).toString(16)
+      HEX += (_hex.length==2?_hex:'0'+_hex);
+    }
+    return HEX;
+  }
+
   function scanQR() {
     camera.style.display = "block"
     dropzone.style.display = "none"
     qrdialog.style.display = "none"
     QRReader.init("#camera", "js/QRScanJS/");
     QRReader.scan(function (result) {
+      if (result.startsWith("http")) {
         window.location = result
+      }
+      else {
+        window.location = base_url + "/#" + base64toHEX(result)
+      }
     });
   }
 
@@ -239,7 +260,8 @@
       }
       client.seed(imageFiles, function(torrent) {
         console.log('Client is seeding:', torrent.infoHash)
-        addQrCode(base_url+"/#"+torrent.infoHash)
+        //addQrCode(base_url+"/#"+torrent.infoHash)
+        addQrCode(hexToBase64(torrent.infoHash))
         addMagnet(torrent.infoHash)
         window.history.pushState({}, "sharing torrent", "#"+torrent.infoHash)
       })
@@ -290,7 +312,8 @@
     torrentId = this_location.split("#")[1]
     console.log("torrent hash found")
     downloadTorrent(torrentId)
-    addQrCode(base_url+"/#"+torrentId)
+    //addQrCode(base_url+"/#"+torrentId)
+    addQrCode(hexToBase64(torrentId))
     infohash = torrentId
     dropzone.style.display = "none"
     qrdialog.style.display = "none"
