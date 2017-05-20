@@ -152,6 +152,8 @@
 
   about = document.getElementById("about")
 
+  navigator.vibrate = navigator.vibrate || navigator.webkitVibrate || navigator.mozVibrate || navigator.msVibrate;
+
   horizontal_count = Math.ceil(window.innerWidth / 400)
   preview_percent = (100/horizontal_count).toString()+"%"
 
@@ -186,6 +188,9 @@
     qrdialog.style.display = "none"
     QRReader.init("#camera", "js/QRScanJS/");
     QRReader.scan(function (result) {
+      if (navigator.vibrate) {
+      	navigator.vibrate(200)
+      }
       if (result.startsWith("http")) {
         window.location = result
       }
