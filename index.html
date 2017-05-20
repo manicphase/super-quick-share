@@ -260,8 +260,8 @@
       }
       client.seed(imageFiles, function(torrent) {
         console.log('Client is seeding:', torrent.infoHash)
-        //addQrCode(base_url+"/#"+torrent.infoHash)
-        addQrCode(hexToBase64(torrent.infoHash))
+        addQrCode(base_url+"/#"+torrent.infoHash)
+        //addQrCode(hexToBase64(torrent.infoHash))
         addMagnet(torrent.infoHash)
         window.history.pushState({}, "sharing torrent", "#"+torrent.infoHash)
       })
@@ -312,8 +312,8 @@
     torrentId = this_location.split("#")[1]
     console.log("torrent hash found")
     downloadTorrent(torrentId)
-    //addQrCode(base_url+"/#"+torrentId)
-    addQrCode(hexToBase64(torrentId))
+    addQrCode(base_url+"/#"+torrentId)
+    //addQrCode(hexToBase64(torrentId))
     infohash = torrentId
     dropzone.style.display = "none"
     qrdialog.style.display = "none"
